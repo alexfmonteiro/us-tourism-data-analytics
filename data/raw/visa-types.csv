@@ -1,0 +1,20 @@
+type,purpose,code,description
+B-1,Business,1,Visa Holder: Non-Immigrant Temporary Visitor for Business
+WB,Business,1,Visa Waiver Program: Temporary Visitor for Business admitted without a Visa
+GB,Business,1,Visa Waiver Program: Guam Visa Waiver Business
+GMB,Business,1,Guam Marianas Business
+I,Business,1,"Visa Holder: Foreign Professional Journalist, Information Media, including Spouse and Child"
+I1,Business,1,"Visa Holder: Foreign Professional Journalist, Information Media, including Spouse and Child"
+E-1,Business,1,Visa Holder: Treaty Trader based on the Trade Treaty between the U.S. and Home Country
+E-2,Business,1,Visa Holder: Treaty Investor based on the Treaty between the U.S. and Home Country
+B-2,Pleasure,2,Visa Holder: Non-Immigrant Temporary Visitor for Pleasure
+WT,Pleasure,2,Visa Waiver Program: Temporary Visitor for Pleasure admitted without a Visa
+GT,Pleasure,2,Visa Waiver Program: Guam Visa Waiver Tourist
+GMT,Pleasure,2,Guam Marianas Tourist
+CP,Pleasure,2,"Parolee (Public Interest – Headquarters) (urgent, medical, family needs) (country code not equal to 584 “Cuba”)"
+CPL,Pleasure,2,Silent Parolee (do not disclose)
+SBP,Pleasure,2,Silent Parolee at POE – CBP
+F-2,Student,3,Visa Holder: Non-Immigrant Student and Exchange Visitor - Academic Student and Spouse or Child of Academic Student
+M1,Student,3,"Visa Holder: Student pursuing a full course of study at an established vocational or other
+recognized non-academic institution (other than in a language training program)."
+M-2,Student,3,Visa Holder: Spouse or Child of M-1 Vocational Student

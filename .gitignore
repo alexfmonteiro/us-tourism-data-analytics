@@ -1,0 +1,6 @@
+/data/raw/i94-parquet/
+/data/raw/i94/
+/.ipynb_checkpoints/
+/.idea/
+/data/raw/us-cities-demographics.csv
+/data/raw/airport-codes.csv
