@@ -17,6 +17,7 @@ The project follows the following steps:
 import pandas as pd
 import datetime as dt
 from pyspark.sql import SparkSession
+from pyspark.sql.types import DateType, StructType, StructField, IntegerType, StringType, FloatType
 spark = SparkSession.builder \
     .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
     .getOrCreate()
@@ -25,7 +26,7 @@ spark = SparkSession.builder \
 ### Step 1: Scope the Project and Gather Data
 
 #### Scope 
-Explain what you plan to do in the project in more detail:
+*Explain what you plan to do in the project in more detail:*
  - Ingest 3 different datasets related to US Immigration Data, Airlines and Global Temperature
  - Explore and asses the data using this Notebook
  - Run data quality checks and exclude data that won't be used
@@ -36,16 +37,16 @@ Explain what you plan to do in the project in more detail:
  - Provide a few analytical queries to validate the final tables
  - **The main purpose of the final data model is to esily provide insights about tourists and immigrants behaviours, if it's possible to correlate travels with the time of the year or with certain regions.**
 
-What data do you use? 
+*What data do you use?*
  - I94 Immigration data of 2016
  - World Temperature Data
  - World Airports Data
 
-What is your end solution look like? 
+*What is your end solution look like?*
  - 8 tables stored in a star schema designed to optimize queries on immigration data in US
  - Some analytical queries to validate a few behaviours
 
-What tools did you use?
+*What tools did you use?*
  - Python 3.6
  - PySpark 2.4.3 using Scala version 2.11.12
  - Java HotSpot(TM) 64-Bit Server VM, 1.8.0_291
@@ -53,7 +54,7 @@ What tools did you use?
  
 
 ### Describe and Gather Data 
-Describe the data sets you're using. Where did it come from? What type of information is included? 
+*Describe the data sets you're using. Where did it come from? What type of information is included?*
 
 #### I94 Immigration Data
 This data comes from the US National Tourism and Trade Office. Basically, this dataset contains international visitor arrival statistics of the year 2016. 
@@ -64,8 +65,7 @@ You can read more about it [here](https://www.trade.gov/national-travel-and-tour
 
 
 ```python
-immig_df = spark.read.parquet("./data/raw/i94-parquet")
-#immig_df.limit(5).toPandas()
+immig_df = spark.read.parquet("./data/raw/i94-sample")
 ```
 
 #### World Temperature Data
@@ -78,38 +78,7 @@ You can read more about it [here](https://www.kaggle.com/berkeleyearth/climate-c
 
 ```python
 temp_df = spark.read.parquet("./data/raw/global_temperature")
-#temp_df.limit(5).toPandas()
 ```
-
------------------------------
-
-
-
-
-
-~~#### U.S. City Demographic Data
-This dataset contains information about the demographics of all US cities and census-designated places with a population greater or equal to 65,000. This data comes from the US Census Bureau's 2015 American Community Survey.~~
-
-~~You can read more about it [here](https://public.opendatasoft.com/explore/dataset/us-cities-demographics/export/).~~
-
-
-```python
-# cities_df = spark.read.options(header='True', inferSchema='True', delimiter=';')\
-#     .csv("./data/raw/us-cities-demographics.csv")
-# cities_df.limit(5).toPandas()
-```
-
-~~#### Airport Code Table
-This is a simple table of airport codes and corresponding cities. You can read more about it [here](https://datahub.io/core/airport-codes#data)~~
-
-
-```python
-# airport_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
-#     .csv("./data/raw/airport-codes.csv")
-#airport_df.limit(5).toPandas()
-```
-
---------
 
 #### Port of Entry Codes
 This dataset contains the three-letter codes that are used by Customs and Border Protection (CBP) in its internal communications to represent ports-of-entry (POEs). It is used in the i94 immigration data in the i94port field. This data came maily from [here](https://fam.state.gov/fam/09FAM/09FAM010205.html), but also some data was merged from the file I94_SAS_Labels_Descriptions.SAS, provided by Udacity.
@@ -118,7 +87,6 @@ This dataset contains the three-letter codes that are used by Customs and Border
 ```python
 ports_df = spark.read.options(header='True', inferSchema='True', delimiter=';')\
     .csv("./data/raw/port-of-entry-codes.csv")
-#ports_df.limit(5).toPandas()
 ```
 
 #### Country Codes Table
@@ -128,7 +96,6 @@ This is a simple dictionary with the codes used in I94 Forms and the correspondi
 ```python
 countries_df = spark.read.options(header='True', inferSchema='True', delimiter=';')\
     .csv("./data/raw/country_codes.txt")
-#countries_df.limit(5).toPandas()
 ```
 
 #### Airline Database
@@ -140,12 +107,22 @@ You can read more about it [here](https://www.kaggle.com/open-flights/airline-da
 ```python
 airlines_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
     .csv("./data/raw/airlines.csv")
-#airlines_df.limit(5).toPandas()
+```
+
+#### Visa Types
+This dataset was assembled in a csv file with data from the Department of State - Bureau of Consular Affairs.
+
+You can read more about it [here](https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/all-visa-categories.html).
+
+
+```python
+visa_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
+    .csv("./data/raw/visa-types.csv")
 ```
 
 ### Step 2: Explore and Assess the Data
 #### Explore the Data 
-Identify data quality issues, like missing values, duplicate data, etc.
+*Identify data quality issues, like missing values, duplicate data, etc.*
 
 
 ```python
@@ -201,7 +178,7 @@ spark.sql('''
 
 
 ```python
-## assesssing visa data
+## assesssing visa data from i94 data
 spark.sql('''
     SELECT i94visa, count(cicid)
       FROM immig_data
@@ -253,11 +230,6 @@ spark.sql('''
 
 
 ```python
-
-```
-
-
-```python
 # assessing temperature dataset
 # selecting cities in US only
 # grouping by month to get the average temperature
@@ -270,7 +242,6 @@ spark.sql('''
      GROUP BY city, country, month(dt)
      ORDER BY city, country, month(dt)
     ''').toPandas()
-
 ```
 
 
@@ -334,12 +305,7 @@ spark.sql('''
 ```
 
 #### Cleaning Steps
-Steps necessary to clean the data for each dataset:
- - drop the columns that won't be useful for the project
- - remove duplicates
- - discard invalid rows 
- - discard subsets of data outside the scope of the project
- - any additional transformation/cleaning step
+Steps necessary to clean the data for each dataset are in the comments.
 
 
 ```python
@@ -372,12 +338,9 @@ cols = ['i94yr', 'i94mon', 'i94cit', 'i94addr',
 immig_df = immig_df.drop(*cols)
 
 #removing duplicates
-if immig_df.distinct().count() != immig_df.count():
-    immig_df.dropDuplicates()
-    print('removing duplicates')
-    print(f'rows count after de-duplicate: {immig_df.count()}')
-else:
-    print('no duplicates found')
+print('removing duplicates')
+immig_df.dropDuplicates()
+print(f'rows count after de-duplicate: {immig_df.count()}')
 
 #casting data types, relabeling column names and replacing values
 immig_df.createOrReplaceTempView("immig_data")
@@ -388,17 +351,8 @@ immig_df = spark.sql('''
            i.i94port airport,
            isoformat(int(i.arrdate)) arrival_date,
            isoformat(int(i.depdate)) departure_date,   
-           CASE
-               WHEN INT(i.i94mode) = 1 THEN 'Air'
-               WHEN INT(i.i94mode) = 2 THEN 'Sea'
-               WHEN INT(i.i94mode) = 3 THEN 'Land'
-               ELSE 'Not reported'
-           END AS mode,
-           CASE
-               WHEN INT(i.i94visa) = 1 THEN 'Business'
-               WHEN INT(i.i94visa) = 2 THEN 'Pleasure'
-               ELSE 'Student'
-           END AS visa,
+           i.i94mode mode,
+           i.i94visa visa,
            i.visatype,
            int(i.i94bir) age,
            i.gender,
@@ -417,6 +371,7 @@ print(f'rows count: {immig_df.count()}')
 
 ```python
 # ports data
+
 # split the location field into city and state
 # select only the ports that has a match in i94 data
 
@@ -434,17 +389,39 @@ ports_df = spark.sql('''
 
 ```python
 # temperature data
+
 # selecting cities in US only
 # grouping by month to get the average temperature
 temp_df.createOrReplaceTempView("temp")
 temp_df = spark.sql('''
-    SELECT city, country, month(dt) month, avg(averagetemperature) avg_temp
+    SELECT city, month(dt) month, avg(averagetemperature) avg_temp
       FROM temp
      WHERE lower(country) in ('united states')
        AND averagetemperature is not null
      GROUP BY city, country, month(dt)
      ORDER BY city, country, month(dt)
-    ''').toPandas()
+    ''')
+```
+
+
+```python
+# airlines data
+
+# filter out invalid rows
+# rename columns
+# select only the ones in i94 immigration data
+
+airlines_df.createOrReplaceTempView('airlines')
+airlines_df = spark.sql('''
+    SELECT a.name,
+           a.iata code,
+           a.country
+      FROM airlines a
+     WHERE a.iata is not null
+       AND a.iata != '-'
+       AND a.iata IN (SELECT DISTINCT(airline)
+                      FROM immig_data)
+    ''')
 ```
 
 ### Step 3: Define the Data Model
@@ -453,35 +430,168 @@ temp_df = spark.sql('''
 
 The data model consists in a star schema with 1 fact table and 7 dimension tables:
 
- - Fact: arrivals
+##### Fact
+1. **arrivals** - transformed data from i94 2016 immigration data
+ - id, airport, arrival_date, departure_date, mode, visa, visatype, age, gender, airline, flight_num, occupation, admission_num, origin_country
 
- - Dims: visa, 194mode, calendar, ports, airlines, countries, temperatures
+##### Dimensions 
+2. **visa** - visa types details
+  - type, purpose, code, description
+
+
+3. **i94mode** - arrival mode
+  - code, desc
+
+
+4. **calendar** - date dimension
+  - date, day, week_day, month, month_name, quarter, year, season, season_name
+
+
+5. **ports** - ports of entry codes and cities
+  - code, city, state
+
+
+6. **airlines** - airlines details
+  - name, code, country
+
+
+7. **countries** - countries codes and names
+  - code, country
+
+
+8. **temperatures** - us cities average temperatures
+  - city, month, avg_temp 
 
 
 
 #### 3.2 Mapping Out Data Pipelines
-List the steps necessary to pipeline the data into the chosen data model
+*List the steps necessary to pipeline the data into the chosen data model*
+
+1. Ingest all raw datasources into pyspark dataframes
+2. Transform the data using pyspark functions and SQL
+3. Load the validated and transformed data into the star schema tables, in the datalake trusted zone
 
 ### Step 4: Run Pipelines to Model the Data 
 #### 4.1 Create the data model
-Build the data pipelines to create the data model.
+*Build the data pipelines to create the data model.*
+
+The pipeline was already partially develop in this notebook, more specifically:
+
+1. Ingest all raw datasources into pyspark dataframes
+ - was already done in Step 1
+
+
+2. Transform the data using pyspark functions and SQL
+ - was partially done in Step 2, missing only the creation of the last two dimension tables: calendar and i94mode. These two tables are created in the next two steps:
 
 
 ```python
-# Write code here
+# calendar dim table
+df = pd.DataFrame({'date': pd.date_range('2000-01-01', '2050-12-31')})
+df['day'] = df.date.dt.day
+df['week_day'] = df.date.dt.day_name()
+df['month'] = df.date.dt.month
+df['month_name'] = df.date.dt.month_name()
+df['quarter'] = df.date.dt.quarter
+df['year'] = df.date.dt.year
+df['season'] = df.date.dt.month%12 // 3 + 1
+di = {1: 'winter', 2: 'spring', 3: 'summer', 4: 'fall'}
+df['season_name'] = df['season'].map(di)
+
+cal_schema = StructType([StructField('date', DateType(), True), \
+                         StructField('day', IntegerType(), True), \
+                         StructField('week_day', StringType(), True), \
+                         StructField('month', IntegerType(), True), \
+                         StructField('month_name', StringType(), True), \
+                         StructField('quarter', IntegerType(), True), \
+                         StructField('year', IntegerType(), True), \
+                         StructField('season', IntegerType(), True),
+                         StructField('season_name', StringType(), True)])
+calendar_df = spark.createDataFrame(df, schema=cal_schema) 
+```
+
+
+```python
+# i94mode dim table
+columns = ['code','description']
+data = [(1, 'Air'), (2, 'Sea'), (3, 'Land'), (9, 'Not Reported')]
+rdd = spark.sparkContext.parallelize(data)
+i94mode_df = rdd.toDF(columns)
+```
+
+Now, as the last part of our ETL, we need to load all dataframes into parquet files in the datalake trusted zone:
+
+
+```python
+#arrivals
+immig_df.write.parquet('./data/trusted/arrivals/', mode='overwrite')
+
+#visa
+visa_df.write.parquet('./data/trusted/visa/', mode='overwrite')
+
+#i94mode
+i94mode_df.write.parquet('./data/trusted/i94mode/', mode='overwrite')
+
+#calendar
+calendar_df.write.parquet('./data/trusted/calendar/', mode='overwrite')
+
+#ports
+ports_df.write.parquet('./data/trusted/ports/', mode='overwrite')
+
+#airlines
+airlines_df.write.parquet('./data/trusted/airlines/', mode='overwrite')
+
+#countries
+countries_df.write.parquet('./data/trusted/countries/', mode='overwrite')
+
+#temperatures
+temp_df.write.parquet('./data/trusted/temperatures/', mode='overwrite')
 ```
 
 #### 4.2 Data Quality Checks
-Explain the data quality checks you'll perform to ensure the pipeline ran as expected. These could include:
- * Integrity constraints on the relational database (e.g., unique key, data type, etc.)
- * Unit tests for the scripts to ensure they are doing the right thing
- * Source/Count checks to ensure completeness
- 
-Run Quality Checks
+*Explain the data quality checks you'll perform to ensure the pipeline ran as expected.*
+
+ - Check if the dataframes have data after the transformations were performed.
+ - Check if each table was created successfully as parquet files in its specific directory.
+
+*Run Quality Checks:*
 
 
 ```python
-# Perform quality checks here
+import os.path
+
+tables = [('arrivals', 'immig_df'),
+          ('visa', 'visa_df'),
+          ('i94mode', 'i94mode_df'),
+          ('calendar', 'calendar_df'),
+          ('ports', 'ports_df'),
+          ('airlines', 'airlines_df'),
+          ('countries', 'countries_df'),
+          ('temperatures', 'temp_df')]
+
+
+# check if the dataframes are not empty
+dfs_ok = True
+for table, df in tables:
+    if eval(df).count() < 1:
+        dfs_ok = False
+        print(f'dataframe {df} is empty')
+
+if dfs_ok: 
+    print('no empties dataframes')
+
+# check if tables as parquet files were successfully generated by the ETL
+tables_ok = True
+for table, df in tables:
+    if not os.path.isfile(f'./data/trusted/{table}/_SUCCESS'):
+        tables_ok = False
+        print(f'table {table} was NOT created successfuly')
+
+if tables_ok: 
+    print('all tables were created successfully')
+
+if dfs_ok and tables_ok: 
+    print('all quality checks passed')
 ```
 
 #### 4.3 Data dictionary 
@@ -494,33 +604,3 @@ Create a data dictionary for your data model. For each field, provide a brief de
  * The data was increased by 100x.
  * The data populates a dashboard that must be updated on a daily basis by 7am every day.
  * The database needed to be accessed by 100+ people.
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
