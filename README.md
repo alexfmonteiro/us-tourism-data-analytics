@@ -24,6 +24,8 @@ spark = SparkSession.builder \
     .getOrCreate()
 ```
 
+---
+
 ### Step 1: Scope the Project and Gather Data
 
 #### Scope 
@@ -120,6 +122,8 @@ You can read more about it [here](https://travel.state.gov/content/travel/en/us-
 visa_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
     .csv("./data/raw/visa-types.csv")
 ```
+
+---
 
 ### Step 2: Explore and Assess the Data
 #### Explore the Data 
@@ -424,6 +428,8 @@ airlines_df = spark.sql('''
     ''')
 ```
 
+---
+
 ### Step 3: Define the Data Model
 #### 3.1 Conceptual Data Model
 *Map out the conceptual data model and explain why you chose that model*
@@ -470,6 +476,8 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
 1. Ingest all raw datasources into pyspark dataframes
 2. Transform the data using pyspark functions and SQL
 3. Load the validated and transformed data into the star schema tables, in the datalake trusted zone
+
+---
 
 ### Step 4: Run Pipelines to Model the Data 
 #### 4.1 Create the data model
@@ -610,6 +618,8 @@ if dfs_ok and tables_ok and rows_ok:
 *Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.*
 
 The data dictionary can be found [here](data-dictionary.md).
+
+---
 
 ### Step 5: Complete Project Write Up
 *Clearly state the rationale for the choice of tools and technologies for the project.*
