@@ -10,6 +10,7 @@ The project follows the following steps:
 * Step 3: Define the Data Model
 * Step 4: Run ETL to Model the Data
 * Step 5: Complete Project Write Up
+* Extra: Write a few analytical queries
 
 
 ```python
@@ -360,7 +361,6 @@ immig_df = spark.sql('''
            i.fltno flight_num,
            i.occup occupation,
            i.admnum admission_num,
-           i.insnum,
            i.country origin_country
       FROM immig_data i
     ''')
@@ -590,17 +590,64 @@ for table, df in tables:
 if tables_ok: 
     print('all tables were created successfully')
 
-if dfs_ok and tables_ok: 
+# check if the amount of rows between dataframes and parquet files match
+rows_ok = True
+for table, df in tables:
+    parquet_count = spark.read.parquet(f'./data/trusted/{table}').count()
+    df_count = eval(df).count()
+    if parquet_count != df_count:
+        rows_ok = False
+        print(f'parquet files rows count does not match dataframe for table {table}')
+
+if rows_ok:
+    print('all parquet files were created with the same rows count as the respective dataframe')
+    
+if dfs_ok and tables_ok and rows_ok: 
     print('all quality checks passed')
 ```
 
 #### 4.3 Data dictionary 
-Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.
+*Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.*
 
-#### Step 5: Complete Project Write Up
-* Clearly state the rationale for the choice of tools and technologies for the project.
-* Propose how often the data should be updated and why.
-* Write a description of how you would approach the problem differently under the following scenarios:
- * The data was increased by 100x.
- * The data populates a dashboard that must be updated on a daily basis by 7am every day.
- * The database needed to be accessed by 100+ people.
+The data dictionary can be found [here](data-dictionary.md).
+
+### Step 5: Complete Project Write Up
+*Clearly state the rationale for the choice of tools and technologies for the project.*
+````
+Python was the language of choice since it's broadly used by data engineers and data scientists, with many libraries and the primary language used throughout this course.
+
+PySpark was the central library of choice since it enables scalable exploratory analysis using its functions and pure SQL. It also provides excellent performance comparing to other libraries, like pandas, since it runs on top of Apache Spark. Nonetheless, it would also make the application ready to run on an EMR cluster if the amount of data increases or more performance is required.
+
+Parquet files in the trusted zone of the datalake are also a good choice since they would easily enable the load to a database, if necessary. Also, if the database of choice is Postgres or Redshift, a single COPY command per table would be enough to transport the data. 
+
+````
+
+*Propose how often the data should be updated and why.*
+````
+The immigration data should be updated weekly, monthly, yearly, or as soon as the US National Tourism and Trade Office releases a new dataset. The same goes for the global temperature data. The other dimension tables don't need to be updated as often since the categorization data doesn't seem to change so frequently.
+````
+
+*Write a description of how you would approach the problem differently under the following scenarios:*
+ - *The data was increased by 100x.*
+````
+In the proposed scenario, I would suggest this ETL script to run on an Apache Hadoop cluster, preferably over Amazon EMR. Also, the datasets could be stored in Amazon S3.
+````
+
+ - *The data populates a dashboard that must be updated on a daily basis by 7am every day.*
+````
+I'd recommend using a workflow automation tool, like Apache Airflow, to orchestrate the data pipeline and schedule the daily runs.
+````
+
+ - *The database needed to be accessed by 100+ people.*
+````
+I'd use Amazon Redshift as the database of choice. According to the documentation, it supports 500+ simultaneous connections, and it's also a scalable and managed service, providing a reliable tool to host the analytical tables.
+````
+
+
+-----------------
+
+### Extra: Write a few analytics queries
+
+A notebook with a few analytical queries can be found [here](analytics.ipynb)
+
+-----
