@@ -613,35 +613,38 @@ The data dictionary can be found [here](data-dictionary.md).
 
 ### Step 5: Complete Project Write Up
 *Clearly state the rationale for the choice of tools and technologies for the project.*
-````
+
 Python was the language of choice since it's broadly used by data engineers and data scientists, with many libraries and the primary language used throughout this course.
 
 PySpark was the central library of choice since it enables scalable exploratory analysis using its functions and pure SQL. It also provides excellent performance comparing to other libraries, like pandas, since it runs on top of Apache Spark. Nonetheless, it would also make the application ready to run on an EMR cluster if the amount of data increases or more performance is required.
 
 Parquet files in the trusted zone of the datalake are also a good choice since they would easily enable the load to a database, if necessary. Also, if the database of choice is Postgres or Redshift, a single COPY command per table would be enough to transport the data. 
 
-````
+
 
 *Propose how often the data should be updated and why.*
-````
+
 The immigration data should be updated weekly, monthly, yearly, or as soon as the US National Tourism and Trade Office releases a new dataset. The same goes for the global temperature data. The other dimension tables don't need to be updated as often since the categorization data doesn't seem to change so frequently.
-````
+
+
 
 *Write a description of how you would approach the problem differently under the following scenarios:*
  - *The data was increased by 100x.*
-````
+
 In the proposed scenario, I would suggest this ETL script to run on an Apache Hadoop cluster, preferably over Amazon EMR. Also, the datasets could be stored in Amazon S3.
-````
+
+
 
  - *The data populates a dashboard that must be updated on a daily basis by 7am every day.*
-````
+
 I'd recommend using a workflow automation tool, like Apache Airflow, to orchestrate the data pipeline and schedule the daily runs.
-````
+
+
 
  - *The database needed to be accessed by 100+ people.*
-````
+
 I'd use Amazon Redshift as the database of choice. According to the documentation, it supports 500+ simultaneous connections, and it's also a scalable and managed service, providing a reliable tool to host the analytical tables.
-````
+
 
 
 -----------------
