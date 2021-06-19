@@ -1,4 +1,4 @@
-# US Domestic Tourism Data Analytics
+# US Immigration and Tourism Data Analytics
 ### Udacity Data Engineering Capstone Project
 
 #### Project Summary
