@@ -4,3 +4,4 @@
 /.idea/
 /data/raw/us-cities-demographics.csv
 /data/raw/airport-codes.csv
+/data/trusted/
