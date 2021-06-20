@@ -5,12 +5,12 @@
 This project aims to gather data from 3 different datasources related to US immigration and tourism data, and transform them into a star schema with tables designed to optimize queries on the data. The main goal is to provide trends and insights about the volume of trips and the time of the year.
       
 The project follows the following steps:
-* Step 1: Scope the Project and Gather Data
-* Step 2: Explore and Assess the Data
-* Step 3: Define the Data Model
-* Step 4: Run ETL to Model the Data
-* Step 5: Complete Project Write Up
-* Extra: Write a few analytical queries
+* [Step 1: Scope the Project and Gather Data](#s1)
+* [Step 2: Explore and Assess the Data](#s2)
+* [Step 3: Define the Data Model](#s3)
+* [Step 4: Run ETL to Model the Data](#s4)
+* [Step 5: Complete Project Write Up](#s5)
+* [Extra: Write a few analytical queries](#s6)
 
 
 ```python
@@ -21,11 +21,18 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import DateType, StructType, StructField, IntegerType, StringType, FloatType
 spark = SparkSession.builder \
     .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
+    .master("local[*]") \
+    .config("spark.executor.memory", "12g") \
+    .config("spark.driver.memory", "12g") \
+    .config("spark.memory.offHeap.enabled", True) \
+    .config("spark.memory.offHeap.size","12g") \
+    .config("spark.sql.shuffle.partitions",64) \
     .getOrCreate()
 ```
 
 ---
 
+<a id='s1'></a>
 ### Step 1: Scope the Project and Gather Data
 
 #### Scope 
@@ -68,7 +75,7 @@ You can read more about it [here](https://www.trade.gov/national-travel-and-tour
 
 
 ```python
-immig_df = spark.read.parquet("./data/raw/i94-sample")
+immig_df = spark.read.parquet("./data/raw/i94-parquet")
 ```
 
 #### World Temperature Data
@@ -125,6 +132,7 @@ visa_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
 
 ---
 
+<a id='s2'></a>
 ### Step 2: Explore and Assess the Data
 #### Explore the Data 
 *Identify data quality issues, like missing values, duplicate data, etc.*
@@ -324,7 +332,7 @@ rows_before = immig_df.count()
 print(f'rows count: {rows_before}')
 
 immig_df = spark.sql('''
-    SELECT i.*, c.country
+    SELECT i.*, int(i.i94res) country
       FROM immig_data i,
            country_codes c
      WHERE int(i.i94res) = c.code
@@ -353,7 +361,7 @@ epoch = dt.datetime(1960, 1, 1).date()
 spark.udf.register("isoformat", lambda x: (epoch + dt.timedelta(x)).isoformat() if x else None)
 immig_df = spark.sql('''
     SELECT int(i.cicid) id,
-           i.i94port airport,
+           i.i94port port,
            isoformat(int(i.arrdate)) arrival_date,
            isoformat(int(i.depdate)) departure_date,   
            i.i94mode mode,
@@ -365,12 +373,19 @@ immig_df = spark.sql('''
            i.fltno flight_num,
            i.occup occupation,
            i.admnum admission_num,
-           i.country origin_country
+           i.country country
       FROM immig_data i
     ''')
 
 print(f'rows count: {immig_df.count()}')
 ```
+
+    rows count: 40790529
+    0 invalid rows removed
+    removing duplicates
+    rows count after de-duplicate: 40790529
+    rows count: 40790529
+
 
 
 ```python
@@ -430,6 +445,7 @@ airlines_df = spark.sql('''
 
 ---
 
+<a id='s3'></a>
 ### Step 3: Define the Data Model
 #### 3.1 Conceptual Data Model
 *Map out the conceptual data model and explain why you chose that model*
@@ -468,6 +484,10 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
 8. **temperatures** - us cities average temperatures
   - city, month, avg_temp 
 
+##### Justification about the data model chosen
+
+
+
 
 
 #### 3.2 Mapping Out Data Pipelines
@@ -479,6 +499,7 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
 
 ---
 
+<a id='s4'></a>
 ### Step 4: Run Pipelines to Model the Data 
 #### 4.1 Create the data model
 *Build the data pipelines to create the data model.*
@@ -532,7 +553,7 @@ Now, as the last part of our ETL, we need to load all dataframes into parquet fi
 
 ```python
 #arrivals
-immig_df.write.parquet('./data/trusted/arrivals/', mode='overwrite')
+immig_df.repartition(40).write.parquet('./data/trusted/arrivals/', mode='overwrite')
 
 #visa
 visa_df.write.parquet('./data/trusted/visa/', mode='overwrite')
@@ -556,11 +577,17 @@ countries_df.write.parquet('./data/trusted/countries/', mode='overwrite')
 temp_df.write.parquet('./data/trusted/temperatures/', mode='overwrite')
 ```
 
+
+```python
+immig_df.repartition(40).write.parquet('./data/trusted/arrivals/', mode='overwrite')
+```
+
 #### 4.2 Data Quality Checks
 *Explain the data quality checks you'll perform to ensure the pipeline ran as expected.*
 
  - Check if the dataframes have data after the transformations were performed.
  - Check if each table was created successfully as parquet files in its specific directory.
+ - Check if the rows count of the parquet files match the dataframes
 
 *Run Quality Checks:*
 
@@ -614,6 +641,12 @@ if dfs_ok and tables_ok and rows_ok:
     print('all quality checks passed')
 ```
 
+    no empties dataframes
+    all tables were created successfully
+    all parquet files were created with the same rows count as the respective dataframe
+    all quality checks passed
+
+
 #### 4.3 Data dictionary 
 *Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.*
 
@@ -621,6 +654,7 @@ The data dictionary can be found [here](data-dictionary.md).
 
 ---
 
+<a id='s5'></a>
 ### Step 5: Complete Project Write Up
 *Clearly state the rationale for the choice of tools and technologies for the project.*
 
@@ -659,7 +693,8 @@ I'd use Amazon Redshift as the database of choice. According to the documentatio
 
 -----------------
 
-### Extra: Write a few analytics queries
+<a id='s6'></a>
+## Extra: Write a few analytics queries
 
 A notebook with a few analytical queries can be found [here](analytics.ipynb)
 
