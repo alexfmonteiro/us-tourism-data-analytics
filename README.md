@@ -380,13 +380,6 @@ immig_df = spark.sql('''
 print(f'rows count: {immig_df.count()}')
 ```
 
-    rows count: 40790529
-    0 invalid rows removed
-    removing duplicates
-    rows count after de-duplicate: 40790529
-    rows count: 40790529
-
-
 
 ```python
 # ports data
@@ -454,7 +447,7 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
 
 ##### Fact
 1. **arrivals** - transformed data from i94 2016 immigration data
- - id, airport, arrival_date, departure_date, mode, visa, visatype, age, gender, airline, flight_num, occupation, admission_num, origin_country
+ - id, airport, arrival_date, departure_date, mode, visa, visatype, age, gender, airline, flight_num, occupation, admission_num, country
 
 ##### Dimensions 
 2. **visa** - visa types details
@@ -485,7 +478,7 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
   - city, month, avg_temp 
 
 ##### Justification about the data model chosen
-
+The star schema can efficiently organize the data in the trusted zone, making it easier to understand for business analytical purposes. The data from the data sources was divided into one fact table (indexing the most considerable amount of temporal event data) and seven dimension tables (most descriptive information). This way, it's more straightforward to write analytical queries, and they can run with improved performance.
 
 
 
@@ -640,12 +633,6 @@ if rows_ok:
 if dfs_ok and tables_ok and rows_ok: 
     print('all quality checks passed')
 ```
-
-    no empties dataframes
-    all tables were created successfully
-    all parquet files were created with the same rows count as the respective dataframe
-    all quality checks passed
-
 
 #### 4.3 Data dictionary 
 *Create a data dictionary for your data model. For each field, provide a brief description of what the data is and where it came from. You can include the data dictionary in the notebook or in a separate file.*
