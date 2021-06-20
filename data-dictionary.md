@@ -6,7 +6,7 @@ Here we have a data dictionary for the proposed data model.
 column name | description
 ---: | :---
 | id | arrival unique id |
-| airport | port of entry code |
+| port | port of entry code |
 | arrival_date | immigrant arrival date |
 | departure_date | immigrant departure date |
 | mode | arrival mode (e.g. land, air, etc.) |
@@ -18,7 +18,7 @@ column name | description
 | flight_num | flight number |
 | occupation | occupation of the immigrant |
 | admission_num | admission number |
-| origin_country | immigrant's country of origin |
+| country | code of visitor's country of origin |
 
 ### Visa
 column name | description
