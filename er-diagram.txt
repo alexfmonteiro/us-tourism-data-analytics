@@ -1,0 +1,58 @@
+//// https://dbdiagram.io/d
+
+Table arrivals {
+  id integer [pk]
+  port string [ref: > ports.code]
+  arrival_date string [ref: > calendar.date]
+  departure_date string [ref: > calendar.date]
+  mode string [ref: > i94mode.code]
+  visatype string [ref: > visa.type]
+  airline string [ref: > airlines.code]
+  country integer [ref: > countries.code]
+  visa string 
+  age integer 
+  gender string 
+  flight_num string 
+  occupation string 
+  admission_num string 
+}
+
+Table visa {
+  type string [pk]
+  purpose string 
+  code integer 
+  description string 
+ }
+ 
+Table i94mode {
+  code long [pk]
+  description string 
+}
+
+Table calendar {
+  date date [pk]
+  day integer 
+  week_day string 
+  month integer 
+  month_name string 
+  quarter integer 
+  year integer 
+  season integer 
+  season_name string 
+}
+
+Table ports {
+  code string [pk]
+  city string [ref: > temperatures.city]
+  state string 
+}
+
+Table airlines {
+  code string [pk]
+  name string 
+  country string 
+}
+
+Table countries {
+  code integer [pk]
+  country string 
