@@ -10,7 +10,7 @@ The project follows the following steps:
 * [Step 3: Define the Data Model](#s3)
 * [Step 4: Run ETL to Model the Data](#s4)
 * [Step 5: Complete Project Write Up](#s5)
-* [Extra: Write a few analytical queries](#s6)
+* [Step 6: Process Result - Demonstrate how to use the tables](#s6)
 
 
 ```python
@@ -137,6 +137,8 @@ visa_df = spark.read.options(header='True', inferSchema='True', delimiter=',')\
 #### Explore the Data 
 *Identify data quality issues, like missing values, duplicate data, etc.*
 
+In this section, there are a some exploratory queries to assess the datasets provided.
+
 
 ```python
 # assessing the data using SQL:
@@ -199,7 +201,11 @@ spark.sql('''
      ORDER BY count(cicid) desc
      LIMIT 50
     ''').toPandas()
+```
 
+
+```python
+## assesssing visa data from i94 data
 spark.sql('''
     SELECT visatype, count(cicid)
       FROM immig_data
@@ -219,7 +225,12 @@ ports_count = spark.sql('''
     SELECT DISTINCT(I94PORT)
       FROM immig_data
     ''').count()
-print(f'ports in i94 data: {ports_count}') #397
+print(f'ports in i94 data: {ports_count}')
+```
+
+
+```python
+# assessing port-of-entry data
 
 # check if all possible ports are in the ports dataframe
 ports_df.createOrReplaceTempView("ports")
@@ -230,7 +241,12 @@ ports_count = spark.sql('''
      WHERE code IN (SELECT DISTINCT(I94PORT)
                       FROM immig_data)
     ''').count()
-print(f'matches with ports in CBP data: {ports_count}') #396
+print(f'matches with ports in CBP data: {ports_count}')
+```
+
+
+```python
+# assessing port-of-entry data
 
 #missing port
 spark.sql('''
@@ -244,6 +260,7 @@ spark.sql('''
 
 ```python
 # assessing temperature dataset
+
 # selecting cities in US only
 # grouping by month to get the average temperature
 temp_df.createOrReplaceTempView("temp")
@@ -269,8 +286,11 @@ top_ports = spark.sql('''
      ORDER BY COUNT(cicid) desc
     ''')
 top_ports.createOrReplaceTempView("top_ports")
+```
 
-#cleaning ports outside us or invalid codes
+
+```python
+#filtering ports outside us or invalid codes
 clean_ports = spark.sql('''
     SELECT code, 
            split(location, ',')[0] city, 
@@ -278,7 +298,11 @@ clean_ports = spark.sql('''
       FROM ports
     ''')
 clean_ports.createOrReplaceTempView("clean_ports")
+```
 
+
+```python
+#filtering ports outside us or invalid codes
 clean_ports = spark.sql('''
     SELECT *
       FROM clean_ports cp, top_ports tp
@@ -288,12 +312,11 @@ clean_ports = spark.sql('''
      ORDER by cnt desc
      LIMIT 100
     ''')
-
+clean_ports.createOrReplaceTempView("clean_ports")
 ```
 
 
 ```python
-clean_ports.createOrReplaceTempView("clean_ports")
 # port cities with a match in the temperature dataset
 spark.sql('''
     SELECT *
@@ -304,7 +327,10 @@ spark.sql('''
  order by p.cnt desc
 
     ''').toPandas()
+```
 
+
+```python
 # port cities without a match in the temperature dataset
 spark.sql('''
     SELECT *
@@ -342,19 +368,28 @@ immig_df = spark.sql('''
 
 rows_after = immig_df.count()
 print(f'{rows_after - rows_before} invalid rows removed')
+```
 
+
+```python
 #dropping columns that won't be used in this project
 cols = ['i94yr', 'i94mon', 'i94cit', 'i94addr', 
         'count', 'dtadfile', 'visapost', 'entdepa', 
         'entdepd', 'entdepu', 'biryear', 'dtaddto', 
         'i94res', 'matflag']
 immig_df = immig_df.drop(*cols)
+```
 
+
+```python
 #removing duplicates
 print('removing duplicates')
 immig_df.dropDuplicates()
 print(f'rows count after de-duplicate: {immig_df.count()}')
+```
 
+
+```python
 #casting data types, relabeling column names and replacing values
 immig_df.createOrReplaceTempView("immig_data")
 epoch = dt.datetime(1960, 1, 1).date()
@@ -477,6 +512,8 @@ The data model consists in a star schema with 1 fact table and 7 dimension table
 8. **temperatures** - us cities average temperatures
   - city, month, avg_temp 
 
+![Entity-Relationship Diagram](img/er-diagram.png)
+
 ##### Justification about the data model chosen
 The star schema can efficiently organize the data in the trusted zone, making it easier to understand for business analytical purposes. The data from the data sources was divided into one fact table (indexing the most considerable amount of temporal event data) and seven dimension tables (most descriptive information). This way, it's more straightforward to write analytical queries, and they can run with improved performance.
 
@@ -570,11 +607,6 @@ countries_df.write.parquet('./data/trusted/countries/', mode='overwrite')
 temp_df.write.parquet('./data/trusted/temperatures/', mode='overwrite')
 ```
 
-
-```python
-immig_df.repartition(40).write.parquet('./data/trusted/arrivals/', mode='overwrite')
-```
-
 #### 4.2 Data Quality Checks
 *Explain the data quality checks you'll perform to ensure the pipeline ran as expected.*
 
@@ -596,8 +628,10 @@ tables = [('arrivals', 'immig_df'),
           ('airlines', 'airlines_df'),
           ('countries', 'countries_df'),
           ('temperatures', 'temp_df')]
+```
 
 
+```python
 # check if the dataframes are not empty
 dfs_ok = True
 for table, df in tables:
@@ -607,7 +641,10 @@ for table, df in tables:
 
 if dfs_ok: 
     print('no empties dataframes')
+```
 
+
+```python
 # check if tables as parquet files were successfully generated by the ETL
 tables_ok = True
 for table, df in tables:
@@ -617,7 +654,10 @@ for table, df in tables:
 
 if tables_ok: 
     print('all tables were created successfully')
+```
 
+
+```python
 # check if the amount of rows between dataframes and parquet files match
 rows_ok = True
 for table, df in tables:
@@ -629,7 +669,10 @@ for table, df in tables:
 
 if rows_ok:
     print('all parquet files were created with the same rows count as the respective dataframe')
-    
+```
+
+
+```python
 if dfs_ok and tables_ok and rows_ok: 
     print('all quality checks passed')
 ```
@@ -681,8 +724,8 @@ I'd use Amazon Redshift as the database of choice. According to the documentatio
 -----------------
 
 <a id='s6'></a>
-## Extra: Write a few analytics queries
+### Step 6: Process Result - Demonstrate how to use the tables
 
-A notebook with a few analytical queries can be found [here](analytics.ipynb)
+A notebook with some analytical queries to demonstrate how to use this data model can be found [here](analytics.ipynb)
 
 -----
